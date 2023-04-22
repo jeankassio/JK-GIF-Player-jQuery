@@ -3,11 +3,11 @@
  * by Jean Kássio
  *
  * More info:
- * https://LBT-Lightbox.jeankassio.dev
+ * https://jeankassio.dev
  *
  * Copyright JK Desenvolvimento WEB <contato@jeankassio.dev> - https://jeankassio.dev
  * Released under the MIT license
- * https://github.com/jeankassio/LBT-Lightbox/blob/main/LICENSE
+ * https://github.com/jeankassio/JK-GIF-Player-jQuery/blob/main/LICENSE
  *
  * @preserve
  */
