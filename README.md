@@ -120,7 +120,9 @@ $(document).on('stop.JK_Gif', '.gifimage', function(e) {
 });
 ```
 
+## Copyright and license
 
+Code released under the [MIT license](https://github.com/jeankassio/LBT-Lightbox/blob/main/LICENSE).
 
 
 
