@@ -1,5 +1,5 @@
 /*!
- * JK GIF Player v0.5.0
+ * JK GIF Player v0.6.7
  * by Jean Kássio
  *
  * More info:
@@ -37,21 +37,21 @@
 			$(container).click(function(e){
 		
 				$gif = $(this),
-				$img = $gif.children('img').eq(0),
+				$img = $gif.find('img').eq(0),
 				$imgSrc = $img.attr('src'),
 				$imgThumb = $img.data('thumb'),
 				$imgGif = $img.data('gif');
 				
 				Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif);
 			
-		});
+			});
 		
     }
 	
 	$.fn.PlayStop_Gif = function(){
 		
 		$gif = $(this),
-		$img = $gif.children('img').eq(0),
+		$img = $gif.find('img').eq(0),
 		$imgSrc = $img.attr('src'),
 		$imgThumb = $img.data('thumb'),
 		$imgGif = $img.data('gif');
@@ -63,33 +63,33 @@
 	$.fn.GetSize_Gif = function(){
 		
 		return {
-			width: $(this).children('img').eq(0).data("width"),
-			height: $(this).children('img').eq(0).data("height")
+			width: $(this).find('img').eq(0).data("width"),
+			height: $(this).find('img').eq(0).data("height")
 		};
 		
 	}
 	
 	$.fn.GetHeight_Gif = function(){
 		
-		return $(this).children('img').eq(0).data("height");
+		return $(this).find('img').eq(0).data("height");
 		
 	}
 	
 	$.fn.GetWidth_Gif = function(){
 		
-		return $(this).children('img').eq(0).data("width");
+		return $(this).find('img').eq(0).data("width");
 		
 	}
 	
 	$.fn.GetDuration_Gif = function(){
 		
-		return $(this).children('img').eq(0).data("seconds");
+		return $(this).find('img').eq(0).data("seconds");
 		
 	}
 	
 	$.fn.GetDurationMili_Gif = function(){
 		
-		return $(this).children('img').eq(0).data("miliseconds");
+		return $(this).find('img').eq(0).data("miliseconds");
 		
 	}
 	
@@ -130,7 +130,7 @@
 		$jkgifs[GetObjectId($(obj))] = setTimeout(function(e){
 			
 			$gif = $(obj),
-			$img = $gif.children('img').eq(0);
+			$img = $gif.find('img').eq(0);
 			
 			$img.data("gif", $img.attr("src"));
 			$img.attr("src", $img.data("thumb"));
@@ -139,7 +139,7 @@
 			
 			$(obj).trigger('stop.JK_Gif');
 			
-		}, ($stop ? 0 : (Number($(obj).children('img').eq(0).data("seconds")) * options.loops) * 1000));
+		}, ($stop ? 0 : (Number($(obj).find('img').eq(0).data("seconds")) * options.loops) * 1000));
 		
 	}
 	
@@ -161,6 +161,22 @@
 		
 		await StaticGifImage(obj);
 		
+		if(options.autoplay){
+		
+			$(obj).each(function(){
+				
+				$gif = $(this),
+				$img = $gif.find('img').eq(0),
+				$imgSrc = $img.attr('src'),
+				$imgThumb = $img.data('thumb'),
+				$imgGif = $img.data('gif');
+				
+				Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif);
+				
+			});
+			
+		}
+		
 	}
 	
 	async function StaticGifImage(obj){
@@ -169,7 +185,7 @@
 
 		image.setAttribute('crossOrigin', 'anonymous');
 		
-		image.src = $(obj).children("img").eq(0).data('gif');
+		image.src = $(obj).find("img").eq(0).data('gif');
 		
 		image.onload = function(){
 			
@@ -178,11 +194,11 @@
 			canvas.width = this.naturalWidth;			
 			canvas.getContext('2d').drawImage(this, 0, 0);
 				
-			CalculateDuration($(obj).children("img").eq(0), image.src);
+			CalculateDuration($(obj).find("img").eq(0), image.src);
 			
-			$(obj).children("img").eq(0).data("width", canvas.width);
-			$(obj).children("img").eq(0).data("height", canvas.height);
-			$(obj).children("img").eq(0).attr("src", canvas.toDataURL());
+			$(obj).find("img").eq(0).data("width", canvas.width);
+			$(obj).find("img").eq(0).data("height", canvas.height);
+			$(obj).find("img").eq(0).attr("src", canvas.toDataURL());
 				
 		};
 		
