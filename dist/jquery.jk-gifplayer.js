@@ -1,246 +1,236 @@
 /*!
- * JK GIF Player v0.6.7
+ * JK GIF Player v1.0.2
  * by Jean Kássio
  *
  * More info:
  * https://jeankassio.dev
  *
- * Copyright JK Desenvolvimento WEB <contato@jeankassio.dev> - https://jeankassio.dev
+ * Copyright JK Desenvolvimento WEB <contato@jeankassio.dev>
  * Released under the MIT license
  * https://github.com/jeankassio/JK-GIF-Player-jQuery/blob/main/LICENSE
  *
  * @preserve
  */
 
-(function($){
-  $.fn.JKGifPlayer = function(options){
+(($) => {
+	$.fn.JKGifPlayer = function (userOptions = {}) {
+	const activeTimers = new Map();
 	
-	$jkgifs = [];
-	
-    let defaults = {
+	const defaults = {
 		autoplay: false,
 		data: "gif",
 		autopause: false,
-		loops: 5
-	}
+		loops: 5,
+	};
 	
-	var options = $.extend(defaults, options);
+	const options = Object.assign({}, defaults, userOptions);
 	
-    function setListeners(container, options){
-		
-		$(container).addClass("jk_gif").append([
-			$("<img/>").data("gif", $(container).data(options.data)).data("thumb", "").attr("src", "")
-		]);
-		
-		LoadGif(container);
-		
-			$(container).click(function(e){
-		
-				$gif = $(this),
-				$img = $gif.find('img').eq(0),
-				$imgSrc = $img.attr('src'),
-				$imgThumb = $img.data('thumb'),
-				$imgGif = $img.data('gif');
-				
-				Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif);
-			
-			});
-		
-    }
+	// ========================
+	// Helpers
+	// ========================
+	const getObjectId = (obj) => {
+		let id = $(obj).attr("id");
+		if (!id) id = createId(obj);
+		return id;
+	};
 	
-	$.fn.PlayStop_Gif = function(){
-		
-		$gif = $(this),
-		$img = $gif.find('img').eq(0),
-		$imgSrc = $img.attr('src'),
-		$imgThumb = $img.data('thumb'),
-		$imgGif = $img.data('gif');
-		
-		Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif);
-		
-	}
+	const createId = (obj) => {
+		const id = `jk_${Math.random().toString(36).substr(2, 9)}`;
+		$(obj).attr("id", id);
+		return id;
+	};
 	
-	$.fn.GetSize_Gif = function(){
-		
-		return {
-			width: $(this).find('img').eq(0).data("width"),
-			height: $(this).find('img').eq(0).data("height")
-		};
-		
-	}
+	// ========================
+	// Core
+	// ========================
+	const playStop = ($gif, $img, src, thumb, gifSrc) => {
+		if (!thumb) {
+		// Play
+		$img.data("thumb", src);
+		$img.attr("src", gifSrc);
+		$img.data("gif", "");
+		$gif.addClass("play_gif");
 	
-	$.fn.GetHeight_Gif = function(){
-		
-		return $(this).find('img').eq(0).data("height");
-		
-	}
+		$gif.trigger("play.JK_Gif");
 	
-	$.fn.GetWidth_Gif = function(){
-		
-		return $(this).find('img').eq(0).data("width");
-		
-	}
+		if (options.autopause) defineTimer($gif, gifSrc, src);
+		} else {
+		// Stop
+		$img.data("gif", src);
+		$img.attr("src", thumb);
+		$img.data("thumb", "");
+		$gif.removeClass("play_gif");
 	
-	$.fn.GetDuration_Gif = function(){
-		
-		return $(this).find('img').eq(0).data("seconds");
-		
-	}
+		$gif.trigger("stop.JK_Gif");
 	
-	$.fn.GetDurationMili_Gif = function(){
-		
-		return $(this).find('img').eq(0).data("miliseconds");
-		
-	}
-	
-	function Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif){
-		
-		if($imgThumb == '' || $imgThumb === undefined){
-			
-			$img.data("thumb", $imgSrc);
-			$img.attr("src", $imgGif);
-			$img.data("gif", "");
-			$gif.addClass('play_gif');
-			
-			$($gif).trigger('play.JK_Gif');
-			
-			if(options.autopause){
-				DefineTimer($gif, $imgGif, $imgSrc);
-			}
-			
-		}else{
-			
-			$img.data("gif", $imgSrc);
-			$img.attr("src", $imgThumb);
-			$img.data("thumb", "");
-			$gif.removeClass('play_gif');
-			
-			$($gif).trigger('stop.JK_Gif');
-			
-			if(options.autopause){
-				clearTimeout($jkgifs[GetObjectId($gif)]);
-			}
-			
+		if (options.autopause) {
+			const id = getObjectId($gif);
+			clearTimeout(activeTimers.get(id));
+			activeTimers.delete(id);
 		}
-		
-	}
-	
-	function DefineTimer(obj, $gifn, $img, $stop = false){
-		
-		$jkgifs[GetObjectId($(obj))] = setTimeout(function(e){
-			
-			$gif = $(obj),
-			$img = $gif.find('img').eq(0);
-			
-			$img.data("gif", $img.attr("src"));
-			$img.attr("src", $img.data("thumb"));
-			$img.data("thumb", "");
-			$gif.removeClass('play_gif');
-			
-			$(obj).trigger('stop.JK_Gif');
-			
-		}, ($stop ? 0 : (Number($(obj).find('img').eq(0).data("seconds")) * options.loops) * 1000));
-		
-	}
-	
-	function GetObjectId(obj){
-		
-		return ($(obj).attr('id') ?? CreateId(obj, Math.random(50).toString()));
-		
-	}
-	
-	function CreateId(obj, $id){
-		
-		$(obj).attr('id', $id);
-		
-		return $id;
-		
-	}
-	
-	async function LoadGif(obj){
-		
-		await StaticGifImage(obj);
-		
-		if(options.autoplay){
-		
-			$(obj).each(function(){
-				
-				$gif = $(this),
-				$img = $gif.find('img').eq(0),
-				$imgSrc = $img.attr('src'),
-				$imgThumb = $img.data('thumb'),
-				$imgGif = $img.data('gif');
-				
-				Play_Stop($gif, $img, $imgSrc, $imgThumb, $imgGif);
-				
-			});
-			
 		}
-		
-	}
+	};
 	
-	async function StaticGifImage(obj){
+	const defineTimer = (obj, gifSrc, imgSrc, stop = false) => {
+		const id = getObjectId(obj);
+		const $img = $(obj).find("img").eq(0);
+		const seconds = parseFloat($img.data("seconds")) || 0;
+		
+		console.log(seconds);
+		
+		const delay = stop ? 0 : seconds * options.loops * 1000;
 	
-		var image = new Image();
-
-		image.setAttribute('crossOrigin', 'anonymous');
-		
-		image.src = $(obj).find("img").eq(0).data('gif');
-		
-		image.onload = function(){
-			
-			var canvas = document.createElement('canvas');
-			canvas.height = this.naturalHeight;
-			canvas.width = this.naturalWidth;			
-			canvas.getContext('2d').drawImage(this, 0, 0);
-				
-			CalculateDuration($(obj).find("img").eq(0), image.src);
-			
-			$(obj).find("img").eq(0).data("width", canvas.width);
-			$(obj).find("img").eq(0).data("height", canvas.height);
-			$(obj).find("img").eq(0).attr("src", canvas.toDataURL());
-				
-		};
-		
+		const timer = setTimeout(() => {
+		const $gif = $(obj);
+		const $img = $gif.find("img").eq(0);
+	
+		$img.data("gif", $img.attr("src"));
+		$img.attr("src", $img.data("thumb"));
+		$img.data("thumb", "");
+		$gif.removeClass("play_gif");
+	
+		$gif.trigger("stop.JK_Gif");
+		}, delay);
+	
+		activeTimers.set(id, timer);
+	};
+	
+	const staticGifImage = async (obj) => {
+		const imgElement = $(obj).find("img").eq(0);
+		const image = new Image();
+		image.crossOrigin = "anonymous";
+		image.src = imgElement.data("gif");
+	
 		await image.decode();
-		
-	}
 	
-	function CalculateDuration(obj, base64){
-  
-	  fetch(base64)
-		.then(res => res.arrayBuffer())
-		.then(ab => isGifAnimated(new Uint8Array(ab)))
-		.then(function(s){
-			
-			$duration = s;
-			
-			$(obj).data("seconds", $duration[0]);
-			$(obj).data("miliseconds", $duration[1]);
-			
-		})
+		const canvas = document.createElement("canvas");
+		canvas.width = image.naturalWidth;
+		canvas.height = image.naturalHeight;
+		canvas.getContext("2d").drawImage(image, 0, 0);
+	
+		await calculateDuration(imgElement, image.src); // <-- AQUI o await real
+	
+		imgElement.data({
+			width: canvas.width,
+			height: canvas.height,
+		});
+	
+		imgElement.attr("src", canvas.toDataURL());
+	};
 
-	  function isGifAnimated (uint8) {
-		let duration = 0
-		for (let i = 0, len = uint8.length; i < len; i++) {
-		  if (uint8[i] == 0x21
-			&& uint8[i + 1] == 0xF9
-			&& uint8[i + 2] == 0x04
-			&& uint8[i + 7] == 0x00) 
-		  {
-			const delay = (uint8[i + 5] << 8) | (uint8[i + 4] & 0xFF)
-			duration += delay < 2 ? 10 : delay
-		  }
-		}
-		return [duration / 100, duration * 10];
-	  }
-	  
-	}
 	
-    return this.each(function(i){
-		
-		setListeners(this, options);
-		
-    });
-  };
+	const calculateDuration = (obj, src) => {
+		return new Promise((resolve) => {
+			fetch(src)
+			.then((res) => res.arrayBuffer())
+			.then((ab) => isGifAnimated(new Uint8Array(ab)))
+			.then(([seconds, milliseconds]) => {
+				$(obj).data({
+				seconds,
+				miliseconds: milliseconds,
+				});
+				resolve([seconds, milliseconds]);
+			});
+	
+			const isGifAnimated = (uint8) => {
+			let duration = 0;
+			for (let i = 0; i < uint8.length; i++) {
+				if (
+				uint8[i] === 0x21 &&
+				uint8[i + 1] === 0xf9 &&
+				uint8[i + 2] === 0x04 &&
+				uint8[i + 7] === 0x00
+				) {
+				const delay = (uint8[i + 5] << 8) | (uint8[i + 4] & 0xff);
+				duration += delay < 2 ? 10 : delay;
+				}
+			}
+			return [duration / 100, duration * 10];
+			};
+		});
+	};
+
+	
+	const loadGif = async (obj) => {
+		await staticGifImage(obj);
+	
+		if (options.autoplay) {
+		$(obj).each(function () {
+			const $gif = $(this);
+			const $img = $gif.find("img").eq(0);
+			const src = $img.attr("src");
+			const thumb = $img.data("thumb");
+			const gifSrc = $img.data("gif");
+			playStop($gif, $img, src, thumb, gifSrc);
+		});
+		}
+	};
+	
+	const setListeners = (container) => {
+		const $container = $(container);
+		const gifSrc = $container.data(options.data);
+	
+		$container
+		.empty()
+		.addClass("jk_gif")
+		.append($("<img/>").data("gif", gifSrc).attr("src", ""));
+	
+		loadGif(container);
+	
+		$container.on("click", function () {
+		const $gif = $(this);
+		const $img = $gif.find("img").eq(0);
+		const src = $img.attr("src");
+		const thumb = $img.data("thumb");
+		const gifSrc = $img.data("gif");
+	
+		playStop($gif, $img, src, thumb, gifSrc);
+		});
+	};
+	
+	// ========================
+	// Public methods
+	// ========================
+	$.fn.PlayStop_Gif = function () {
+		return this.each(function () {
+		const $gif = $(this);
+		const $img = $gif.find("img").eq(0);
+		const src = $img.attr("src");
+		const thumb = $img.data("thumb");
+		const gifSrc = $img.data("gif");
+		playStop($gif, $img, src, thumb, gifSrc);
+		});
+	};
+	
+	$.fn.GetSize_Gif = function () {
+		const $img = $(this).find("img").eq(0);
+		return {
+		width: $img.data("width"),
+		height: $img.data("height"),
+		};
+	};
+	
+	$.fn.GetHeight_Gif = function () {
+		return $(this).find("img").eq(0).data("height");
+	};
+	
+	$.fn.GetWidth_Gif = function () {
+		return $(this).find("img").eq(0).data("width");
+	};
+	
+	$.fn.GetDuration_Gif = function () {
+		return $(this).find("img").eq(0).data("seconds");
+	};
+	
+	$.fn.GetDurationMili_Gif = function () {
+		return $(this).find("img").eq(0).data("miliseconds");
+	};
+	
+	// ========================
+	// Init
+	// ========================
+	return this.each(function () {
+		setListeners(this);
+	});
+	};
 })(jQuery);
