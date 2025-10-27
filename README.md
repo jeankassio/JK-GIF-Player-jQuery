@@ -35,7 +35,8 @@ $(".div_with_data_gif").JKGifPlayer({
 And the result will be:
 
 
-![image](https://github.com/jeankassio/JK-GIF-Player-jQuery/blob/main/images/model.gif)
+![model](https://github.com/user-attachments/assets/9c0d7a94-4746-4b42-a9c5-49c5e1dcca42)
+
 
 
 ## Parameters
